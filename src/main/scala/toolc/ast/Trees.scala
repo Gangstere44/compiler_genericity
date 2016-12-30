@@ -33,7 +33,8 @@ object Trees {
     extends DefTree
   case class MainObject(id: Identifier, stats: List[StatTree])
     extends DefTree with Symbolic[MainSymbol]
-  case class ClassDecl(id: Identifier, parent: Option[Identifier], vars: List[VarDecl], methods: List[MethodDecl])
+  // change
+  case class ClassDecl(id: Identifier, gen: Option[Identifier], parent: Option[Identifier], vars: List[VarDecl], methods: List[MethodDecl])
     extends DefTree with Symbolic[ClassSymbol]
   case class VarDecl(tpe: TypeTree, id: Identifier)
     extends DefTree with Symbolic[VariableSymbol]

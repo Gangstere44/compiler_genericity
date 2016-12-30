@@ -63,7 +63,8 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     'MainObject ::= PROGRAM() ~ 'Identifier ~ LBRACE() ~ 'Stmts ~ RBRACE(),
     'Stmts ::= 'Statement ~ 'Stmts | epsilon(),
     'ClassDecls ::= 'ClassDeclaration ~ 'ClassDecls | epsilon(),
-    'ClassDeclaration ::= CLASS() ~ 'Identifier ~ 'OptExtends ~ 'ClassBody,
+    'ClassDeclaration ::= CLASS() ~ 'Identifier ~ 'ClassGenericity ~ 'OptExtends ~ 'ClassBody, // change
+    'ClassGenericity ::= LBRACKET() ~ 'Identifier ~ RBRACKET() | epsilon(), // change
     'OptExtends ::= epsilon() | EXTENDS() ~ 'Identifier,
     'ClassBody ::= LBRACE() ~ 'VarDecs ~ 'MethodDecs ~ RBRACE(),
     'VarDecs ::= 'VarDeclaration ~ 'VarDecs | epsilon(),
@@ -72,8 +73,10 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     'MethodDeclaration ::= DEF() ~ 'Identifier ~ LPAREN() ~ 'Params ~ RPAREN() ~ COLON() ~ 'Type ~ EQSIGN() ~ LBRACE() ~ 'VarDecs ~ 'Stmts ~ RETURN() ~ 'Expression ~ SEMICOLON() ~ RBRACE(),
     'Params ::= epsilon() | 'Param ~ 'ParamList,
     'ParamList ::= epsilon() | COMMA() ~ 'Param ~ 'ParamList,
-    'Param ::= 'Identifier ~ COLON() ~ 'Type,
-    'Type ::= INT() ~ 'TypeInt | BOOLEAN() | STRING() | 'Identifier,
+    'Param ::= 'Identifier ~ COLON() ~ 'Type, 
+    'Type ::= INT() ~ 'TypeInt | BOOLEAN() | 'TypeObject, 
+    'TypeObject ::= STRING() | 'Identifier ~ 'VarGenericity, 
+    'VarGenericity ::= LBRACKET() ~ 'TypeObject ~ RBRACKET() | epsilon(),
     'TypeInt ::= epsilon() | LBRACKET() ~ RBRACKET() ,
     
     'Expression ::= 'TermOR ~ 'TermListOR,
@@ -96,7 +99,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     'TermArray ::= 'TermDOT ~ 'TermListDOT,
     'TermListDOT ::= DOT() ~ 'TermDOTBIS | epsilon(),
     'TermDOTBIS ::= LENGTH() | 'Identifier ~ LPAREN() ~ 'Args ~ RPAREN() ~ 'TermListDOT,
-    'TermDOT ::= NEW() ~ 'TermNewBIS | 'TermNew,
+    'TermDOT ::= NEW() ~ 'TermNewBIS | 'TermNew, // TODO add genericity
     'TermNewBIS ::= 'TermNew ~ LPAREN() ~ RPAREN() | INT() ~ LBRACKET() ~ 'Expression ~ RBRACKET(),
     'TermNew ::= 'Identifier 
       | TRUE() 

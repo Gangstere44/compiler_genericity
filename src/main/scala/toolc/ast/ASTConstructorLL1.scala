@@ -8,8 +8,31 @@ import grammarcomp.parsing._
 
 class ASTConstructorLL1 extends ASTConstructor {
 
-  // TODO: Adapt this to your new grammar by overriding/ adding methods as needed
-
+  override def constructClass(ptree: NodeOrLeaf[Token]): ClassDecl = {
+    ptree match {
+      case Node(
+        'ClassDeclaration ::= _,
+        List(Leaf(cls), id, clgen, optextends, Node('ClassBody ::= _, List(_, vardecls, methoddecls, _)))
+        ) =>
+        ClassDecl(
+          constructId(id),
+          constructOption(clgen, constructId), // change
+          constructOption(optextends, constructId),
+          constructList(vardecls, constructVarDecl),
+          constructList(methoddecls, constructMethodDecl)).setPos(cls)
+    }
+  }
+ 
+  override def constructOption[A](ptree: NodeOrLeaf[Token], constructor: NodeOrLeaf[Token] => A): Option[A] = {
+    ptree match {
+      case Node(_, List()) => None
+      case Node(_, List(_, t)) =>
+        Some(constructor(t))
+      case Node(_, List(_, t, _)) => // change
+        Some(constructor(t))
+    }
+  }
+  
   override def constructType(ptree: NodeOrLeaf[Token]): TypeTree = {
     ptree match {
       case Node('Type ::= _, List(Leaf(i @ INT()), ti)) =>
@@ -21,7 +44,7 @@ class ASTConstructorLL1 extends ASTConstructor {
       case Node('Type ::= List(IDSENT), List(id)) =>
         val pid = constructId(id)
         ClassType(pid).setPos(pid)
-      case Node('Type ::= List('Identifier), List(id)) => 
+      case Node('Type ::= List('Identifier), List(id)) =>
         val pid = constructId(id)
         ClassType(pid).setPos(pid)
     }
@@ -140,8 +163,8 @@ class ASTConstructorLL1 extends ASTConstructor {
   }
 
   def constructListOption(ptreeLeft: ExprTree, ptreeRight: NodeOrLeaf[Token]): Option[ExprTree] = {
-   // println("---")
-   // println(ptreeLeft + " " + ptreeRight)
+    // println("---")
+    // println(ptreeLeft + " " + ptreeRight)
     ptreeRight match {
       case Node('TermListOR ::= List(_, 'TermOR, 'TermListOR), List(op, to, tlo)) => {
         val e2 = constructExpr(to)

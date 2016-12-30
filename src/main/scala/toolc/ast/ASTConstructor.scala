@@ -33,6 +33,7 @@ class ASTConstructor {
       ) =>
         ClassDecl(
           constructId(id),
+          None,
           constructOption(optextends, constructId),
           constructList(vardecls, constructVarDecl),
           constructList(methoddecls, constructMethodDecl)
