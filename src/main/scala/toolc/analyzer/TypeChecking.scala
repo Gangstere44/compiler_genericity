@@ -107,7 +107,7 @@ object TypeChecking extends Pipeline[Program, Program] {
 
           }
         }
-        case New(tpe)         => 
+        case New(tpe, _)         => // TODO
         case StringLit(value) =>
         case IntLit(value)    =>
         case True()           =>

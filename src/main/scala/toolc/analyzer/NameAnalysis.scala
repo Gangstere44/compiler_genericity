@@ -324,7 +324,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         case Variable(id) => {
           setISymbol(id)
         }
-        case New(tpe) => {
+        case New(tpe, _) => { // TODO
           gs.lookupClass(tpe.value) match {
             case Some(c) => tpe.setSymbol(c)
             case None    => error("Undeclared identifier: " + tpe.value + ".", tpe)

@@ -174,8 +174,8 @@ object Printer {
         "this"
       case NewIntArray(size) =>
         "(new Int[" <:> rec(size) <:> "])"
-      case New(tpe) =>
-        "(new " <:> rec(tpe) <:> "())"
+      case New(tpe, gen) =>
+        "(new " <:> rec(tpe) <:> (gen map { "[" <:> rec(_) <:> "]" } getOrElse "") <:> "())"
       case Not(expr) =>
         "(!(" <:> rec(expr) <:> "))"
     }

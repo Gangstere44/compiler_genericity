@@ -214,7 +214,7 @@ class Evaluator(ctx: Context, prog: Program) {
     case Variable(Identifier(name)) =>
       ectx.getVariable(name)
       
-    case New(tpe) =>
+    case New(tpe, _) =>
       val c = findClass(tpe.value)
       val o = ObjectValue(c)
       fieldsOfClass(c).foreach { name => o.declareField(name) }

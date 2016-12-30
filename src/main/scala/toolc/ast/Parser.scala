@@ -75,8 +75,8 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     'ParamList ::= epsilon() | COMMA() ~ 'Param ~ 'ParamList,
     'Param ::= 'Identifier ~ COLON() ~ 'Type, 
     'Type ::= INT() ~ 'TypeInt | BOOLEAN() | 'TypeObject, 
-    'TypeObject ::= STRING() | 'Identifier ~ 'VarGenericity, 
-    'VarGenericity ::= LBRACKET() ~ 'TypeObject ~ RBRACKET() | epsilon(),
+    'TypeObject ::= STRING() | 'Identifier ~ 'TypeGenericity, 
+    'TypeGenericity ::= LBRACKET() ~ 'TypeObject ~ RBRACKET() | epsilon(),
     'TypeInt ::= epsilon() | LBRACKET() ~ RBRACKET() ,
     
     'Expression ::= 'TermOR ~ 'TermListOR,
@@ -99,8 +99,8 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     'TermArray ::= 'TermDOT ~ 'TermListDOT,
     'TermListDOT ::= DOT() ~ 'TermDOTBIS | epsilon(),
     'TermDOTBIS ::= LENGTH() | 'Identifier ~ LPAREN() ~ 'Args ~ RPAREN() ~ 'TermListDOT,
-    'TermDOT ::= NEW() ~ 'TermNewBIS | 'TermNew, // TODO add genericity
-    'TermNewBIS ::= 'TermNew ~ LPAREN() ~ RPAREN() | INT() ~ LBRACKET() ~ 'Expression ~ RBRACKET(),
+    'TermDOT ::= NEW() ~ 'TermNewBIS | 'TermNew, 
+    'TermNewBIS ::= 'Identifier ~ 'TypeGenericity ~ LPAREN() ~ RPAREN() | INT() ~ LBRACKET() ~ 'Expression ~ RBRACKET(), // change
     'TermNew ::= 'Identifier 
       | TRUE() 
       | FALSE()

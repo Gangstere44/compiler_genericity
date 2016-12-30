@@ -77,7 +77,7 @@ class ASTConstructorLL1 extends ASTConstructor {
     ptree match {
       case Node('TypeObject ::= _, List(Leaf(s @ STRING()))) =>
         StringType().setPos(s)
-      case Node('TypeObject ::= List('Identifier, 'VarGenericity), List(id, vargen)) =>
+      case Node('TypeObject ::= List('Identifier, 'TypeGenericity), List(id, vargen)) =>
         val pid = constructId(id)
         val gen = constructOption(vargen, constructTypeObject)
         
@@ -161,11 +161,10 @@ class ASTConstructorLL1 extends ASTConstructor {
         val e1 = constructExpr(tn)
         e1.setPos(e1)
       }
-      case Node('TermNewBIS ::= List('TermNew, LPAREN(), RPAREN()), List(tn, _, _)) => {
-        val e1 = constructExpr(tn)
-        e1 match {
-          case Variable(id) => New(id)
-        }
+      case Node('TermNewBIS ::= List('Identifier, 'TypeGenericity ,LPAREN(), RPAREN()), List(tn, tg,_, _)) => {
+        val id = constructId(tn)
+        val gen = constructOption(tg, constructTypeObject) // change
+        New(id, gen).setPos(id)
       }
       case Node('TermNewBIS ::= List(INT(), LBRACKET(), 'Expression, RBRACKET()), List(Leaf(i), _, ex, _)) => {
         NewIntArray(constructExpr(ex)).setPos(i)

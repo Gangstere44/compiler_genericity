@@ -166,7 +166,7 @@ class ASTConstructor {
       case Node('Expression ::= List(NEW(), INT(), LBRACKET(), 'Expression, RBRACKET()), List(Leaf(nt), _, _, e, _)) =>
         NewIntArray(constructExpr(e)).setPos(nt)
       case Node('Expression ::= List(NEW(), 'Identifier, LPAREN(), RPAREN()), List(Leaf(nt), id, _, _)) =>
-        New(constructId(id)).setPos(nt)
+        New(constructId(id), None).setPos(nt)
       case Node('Expression ::= List(BANG(), 'Expression), List(Leaf(bt), e)) =>
         Not(constructExpr(e)).setPos(bt)
       case Node('Expression ::= List(LPAREN(), 'Expression, RPAREN()), List(Leaf(lp), e, _)) =>

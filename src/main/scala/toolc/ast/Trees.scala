@@ -166,7 +166,7 @@ object Trees {
       }
     }
   }
-  case class New(tpe: Identifier) extends ExprTree {
+  case class New(tpe: Identifier, gen: Option[ObjectTypeTree]) extends ExprTree {
     def getType = tpe.getType match {
       case t@TClass(_) => t
       case other => TError

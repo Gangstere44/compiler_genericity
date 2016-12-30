@@ -390,7 +390,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
 
         }
-        case New(tpe) => {
+        case New(tpe, _) => { // TODO
 
           tpe.getType match {
             case TClass(c) => {
