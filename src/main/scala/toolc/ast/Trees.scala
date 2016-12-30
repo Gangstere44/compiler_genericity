@@ -50,6 +50,9 @@ object Trees {
 
   // Types
   sealed trait TypeTree extends Tree with Typed
+
+  sealed trait ObjectTypeTree extends TypeTree //extends Tree with Typed
+
   case class IntArrayType() extends TypeTree {
     override def getType = TIntArray
   }
@@ -59,15 +62,13 @@ object Trees {
   case class BooleanType() extends TypeTree {
     override def getType = TBoolean
   }
-  case class StringType() extends TypeTree {
+  case class StringType() extends ObjectTypeTree {
     override def getType = TString
   }
-  case class ClassType(id: Identifier) extends TypeTree {
+  case class ClassType(id: Identifier, gen : Option[ObjectTypeTree]) extends ObjectTypeTree{
     override def getType = id.getType
   }
-  case class GenericType(id: Identifier) extends TypeTree {
-    override def getType = id.getType
-  }
+  
 
   // Statements
   sealed trait StatTree extends Tree

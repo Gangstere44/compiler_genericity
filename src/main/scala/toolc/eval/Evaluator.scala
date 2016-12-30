@@ -205,7 +205,7 @@ class Evaluator(ctx: Context, prog: Program) {
         case IntArrayType() =>
           (evalExpr(methodInfo.retExpr)(methCont)).asArray
           
-        case ClassType(_) =>
+        case ClassType(_, _) => // change
           (evalExpr(methodInfo.retExpr)(methCont)).asObject
 
       }

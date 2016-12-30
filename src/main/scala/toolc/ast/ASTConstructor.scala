@@ -87,7 +87,7 @@ class ASTConstructor {
         StringType().setPos(s)
       case Node('Type ::= List('Identifier), List(id)) =>
         val pid = constructId(id)
-        ClassType(pid).setPos(pid)
+        ClassType(pid, None).setPos(pid)
     }
   }
 

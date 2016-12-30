@@ -104,7 +104,7 @@ object Printer {
       case IntType() => "Int"
       case BooleanType() => "Bool"
       case StringType() => "String"
-      case ClassType(id) => rec(id)
+      case ClassType(id, gen) => rec(id) <:> (gen map { "[" <:> rec(_) <:> "]" } getOrElse "") // change
 
       case Block(stats) =>
         Stacked(

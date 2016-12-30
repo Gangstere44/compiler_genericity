@@ -110,7 +110,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           for (varClass <- parentDecl.vars) {
             val varS = new VariableSymbol(varClass.id.value);
             varClass.tpe match {
-              case ClassType(t) => global.lookupClass(t.value) match {
+              case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
                 case Some(c) => varS.setType(c.getType)
                 case None    => varS.setType(Types.TError)
               }
@@ -133,7 +133,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             meth.id.setSymbol(method)
             
             meth.retType match {
-              case ClassType(t) => global.lookupClass(t.value) match {
+              case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
                 case Some(c) => method.setType(c.getType)
                 case None    => method.setType(Types.TError)
               }
@@ -150,7 +150,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 argMeth.id.setSymbol(argS)
 
                 argMeth.tpe match {
-                  case ClassType(t) => global.lookupClass(t.value) match {
+                  case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
                     case Some(c) => argS.setType(c.getType)
                     case None    => argS.setType(Types.TError)
                   }
@@ -174,7 +174,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 varMeth.id.setSymbol(varS)
 
                 varMeth.tpe match {
-                  case ClassType(t) => global.lookupClass(t.value) match {
+                  case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
                     case Some(c) => varS.setType(c.getType)
                     case None    => varS.setType(Types.TError)
                   }
@@ -385,7 +385,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     def setTypeSymbol(tpe: TypeTree, gs: GlobalScope): Unit = {
       tpe match {
-        case ClassType(id) => {
+        case ClassType(id, _) => { // TODO
           val cS = gs.lookupClass(id.value)
           cS match {
             case Some(c) => id.setSymbol(c)
