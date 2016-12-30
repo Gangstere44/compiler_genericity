@@ -53,7 +53,7 @@ object Symbols {
 
   class MainSymbol(val name: String) extends Symbol
 
-  class ClassSymbol(val name: String) extends Symbol {
+  class ClassSymbol(val name: String, val gen: Option[String]) extends Symbol {
     override def getType = TClass(this)
     override def setType(t: Type) = sys.error("Cannot set the symbol of a ClassSymbol")
 

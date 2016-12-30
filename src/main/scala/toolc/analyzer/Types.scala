@@ -57,8 +57,12 @@ object Types {
     }
     override def toString = classSymbol.name
   }
+  
+  case class TGeneric(linkedClass : ClassSymbol) extends Type {
+    override def toString = linkedClass.gen.get
+  }
 
   // The top of the class hierarchy. Does not correspond to anything in a Tool program,
   // we just use if for convenience during type checking.
-  val TObject = TClass(new ClassSymbol("Object"))
+  val TObject = TClass(new ClassSymbol("Object", None)) // change
 }

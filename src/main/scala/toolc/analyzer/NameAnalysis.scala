@@ -24,7 +24,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         error("the main object is called object", prog.main.id)
       }
       for (c <- prog.classes) {
-        val cS = new ClassSymbol(c.id.value)
+        val cS = new ClassSymbol(c.id.value, c.gen.map { x => x.value })
         //cS.setType(Types.TClass(cS)) //TYPE
         if (cS.name.equals(global.mainClass.name)) {
           error("Class called like the main forbidden", c.id)
@@ -99,8 +99,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       prog.classes.foreach(c => collectInClass(c, mapSymToDecl))
 
       def collectInClass(c: ClassDecl, mapSymToDecl: Map[ClassSymbol, ClassDecl]): Unit = {
-        
-        
+
         def collectInternal(cS: ClassSymbol): Unit = {
           done = done.+(cS.name)
 
@@ -110,9 +109,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
           for (varClass <- parentDecl.vars) {
             val varS = new VariableSymbol(varClass.id.value);
             varClass.tpe match {
-              case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
-                case Some(c) => varS.setType(c.getType)
-                case None    => varS.setType(Types.TError)
+              case ClassType(t, g) => global.lookupClass(t.value) match { // TODO
+                case Some(sym) => varS.setType(sym.getType)
+                case None => {
+                  if (cS.gen.getOrElse("") == t.value && !g.isDefined) {
+                    varS.setType(Types.TGeneric(cS))
+                  } else {
+                    varS.setType(Types.TError)
+                  }
+                }
               }
               case _ => varS.setType(varClass.tpe.getType) // TYPE
             }
@@ -131,7 +136,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             val method: MethodSymbol = new MethodSymbol(meth.id.value, cS);
             meth.setSymbol(method)
             meth.id.setSymbol(method)
-            
+
             meth.retType match {
               case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
                 case Some(c) => method.setType(c.getType)
@@ -184,7 +189,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 method.members += (varS.name -> varS)
               }
             }
-            
+
             // check method correctness if overriding
             cS.lookupMethod(method.name) match {
 
@@ -198,8 +203,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   val argTypeCheck = (for ((a1, a2) <- me.argList zip method.argList) yield a2.getType.toString() eq a1.getType.toString())
                   if (!(me.getType.toString() eq method.getType.toString())) {
                     error("Try to override in a wrong way by the return type, shoudl be : " + me.getType + " is : " + method.getType, meth.id)
-                  }
-                  else if ((argTypeCheck.size > 0 && !argTypeCheck.reduceLeft(_ && _))) { // TYPE
+                  } else if ((argTypeCheck.size > 0 && !argTypeCheck.reduceLeft(_ && _))) { // TYPE
                     error("Try to override in a wrong way by the Type for one of the argument", meth.id)
                   } else {
                     method.overridden = Option(me)
@@ -243,8 +247,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
     }
 
     def setPSymbols(prog: Program, gs: GlobalScope): Unit = {
-      // TODO: Traverse within each definition of the program
-      //       and attach symbols to Identifiers and "this"
 
       prog.main.stats.foreach { s => setSSymbols(s)(gs, None) }
       prog.classes.foreach { c => setCSymbols(c, gs) }
@@ -332,7 +334,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
         case MethodCall(o, m, a) => {
           setESymbols(o)
-          
+
           a.foreach { e => setESymbols(e) }
         }
         case x: This => {
