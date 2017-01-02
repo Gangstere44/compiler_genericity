@@ -24,8 +24,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
         error("the main object is called object", prog.main.id)
       }
       for (c <- prog.classes) {
-        val cS = new ClassSymbol(c.id.value, c.gen.map { x => x.value })
-        //cS.setType(Types.TClass(cS)) //TYPE
+        val cS = new ClassSymbol(c.id.value) //c.gen.map { x => x.value })
+        if (c.gen.isDefined) {
+          val gS = new GenericSymbol(c.gen.get.value, cS) // TODO pour multiple
+          cS.gen.+(c.gen.get.value -> gS)
+        }
         if (cS.name.equals(global.mainClass.name)) {
           error("Class called like the main forbidden", c.id)
         } else if (cS.name.equals("Object")) {
@@ -100,6 +103,29 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       def collectInClass(c: ClassDecl, mapSymToDecl: Map[ClassSymbol, ClassDecl]): Unit = {
 
+        def constructTypeSymbol(currentCSym: ClassSymbol, cur: TypeTree): Types.Type = {
+          cur match {
+            case c: ClassType => {
+              global.lookupClass(c.id.value) match {
+                case Some(cSym: ClassSymbol) => {
+                  Types.TClass(cSym, c.gen.map { x => constructTypeSymbol(currentCSym, x) })
+                }
+                case None => {
+                  currentCSym.lookupGen(c.id.value) match {
+                    case Some(gS) => {
+                      c.id.setSymbol(gS)
+                      gS.getType
+                    }
+                    case None => Types.TError
+
+                  }
+                }
+              }
+            }
+            case c => c.getType
+          }
+        }
+
         def collectInternal(cS: ClassSymbol): Unit = {
           done = done.+(cS.name)
 
@@ -108,9 +134,19 @@ object NameAnalysis extends Pipeline[Program, Program] {
           // add the class variable of the parent to the class scope
           for (varClass <- parentDecl.vars) {
             val varS = new VariableSymbol(varClass.id.value);
+            varS.setType(constructTypeSymbol(cS, varClass.tpe))
+            /*
             varClass.tpe match {
-              case ClassType(t, g) => global.lookupClass(t.value) match { // TODO
-                case Some(sym) => varS.setType(sym.getType)
+              case ClassType(t, g) => global.lookupClass(t.value) match { 
+                 case Some(sym) => {
+                  g match {
+                    case Some(genericity) => 
+                    case None => varS.setType(sym.getType)
+                  }
+                  varS.setType(Types.TClass(NodeSymbole, Some(TClass(NodeSymbol, Some(TGeneric(Node[T])))))
+                  
+                }
+                
                 case None => {
                   if (cS.gen.getOrElse("") == t.value && !g.isDefined) {
                     varS.setType(Types.TGeneric(cS))
@@ -121,6 +157,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               }
               case _ => varS.setType(varClass.tpe.getType) // TYPE
             }
+            */
             cS.lookupVar(varS.name) match {
               case Some(v) => error("Multiple definition of a variable in a class", varClass.id)
               case None => {
@@ -326,7 +363,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         case Variable(id) => {
           setISymbol(id)
         }
-        case New(tpe, _) => { // TODO
+        case New(tpe, optGen) => { // TODO
           gs.lookupClass(tpe.value) match {
             case Some(c) => tpe.setSymbol(c)
             case None    => error("Undeclared identifier: " + tpe.value + ".", tpe)

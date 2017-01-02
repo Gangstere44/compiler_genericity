@@ -38,7 +38,7 @@ object Types {
     override def toString = "Int[]"
   }
   
-  case class TClass(classSymbol: ClassSymbol) extends Type {
+  case class TClass(classSymbol: ClassSymbol, genType : Option[Type]) extends Type {
     override def isSubTypeOf(tpe: Type): Boolean = {
       
       def checkSub(cl : ClassSymbol) : Boolean = {
@@ -58,11 +58,12 @@ object Types {
     override def toString = classSymbol.name
   }
   
-  case class TGeneric(linkedClass : ClassSymbol) extends Type {
-    override def toString = linkedClass.gen.get
+  // in Fact[T] , TGeneric(Fact[T]) -> interesting for T only, T is TGeneric
+  case class TGeneric(val name: String, val linkedClass : ClassSymbol) extends Type { 
+    override def toString = name
   }
 
   // The top of the class hierarchy. Does not correspond to anything in a Tool program,
   // we just use if for convenience during type checking.
-  val TObject = TClass(new ClassSymbol("Object", None)) // change
+  val TObject = TClass(new ClassSymbol("Object"), None) // change
 }

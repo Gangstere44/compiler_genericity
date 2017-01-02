@@ -18,7 +18,7 @@ object Symbols {
 
     def getSymbol: S = _sym match {
       case Some(s) => s
-      case None => sys.error("Accessing undefined symbol.")
+      case None    => sys.error("Accessing undefined symbol.")
     }
 
     def optSymbol = _sym
@@ -46,20 +46,23 @@ object Symbols {
   /** The global scope contains symbols of the main object and classes */
   class GlobalScope {
     var mainClass: MainSymbol = _
-    var classes = Map[String,ClassSymbol]()
+    var classes = Map[String, ClassSymbol]()
 
     def lookupClass(n: String): Option[ClassSymbol] = classes.get(n)
   }
 
   class MainSymbol(val name: String) extends Symbol
 
-  class ClassSymbol(val name: String, val gen: Option[String]) extends Symbol {
-    override def getType = TClass(this)
+  class ClassSymbol(val name: String) extends Symbol {
+    override def getType = {
+      TClass(this, None) // TODO 
+    }
     override def setType(t: Type) = sys.error("Cannot set the symbol of a ClassSymbol")
 
     var parent: Option[ClassSymbol] = None
-    var methods = Map[String,MethodSymbol]()
-    var members = Map[String,VariableSymbol]()
+    var methods = Map[String, MethodSymbol]()
+    var members = Map[String, VariableSymbol]()
+    var gen = Map[String, GenericSymbol]()
 
     def lookupMethod(n: String): Option[MethodSymbol] = {
       methods.get(n) orElse parent.flatMap(_.lookupMethod(n))
@@ -68,24 +71,32 @@ object Symbols {
     def lookupVar(n: String): Option[VariableSymbol] = {
       members.get(n) orElse parent.flatMap(_.lookupVar(n))
     }
+    
+    def lookupGen(n: String): Option[GenericSymbol] = {
+      gen.get(n) orElse None
+    }
   }
-
+  
+  class GenericSymbol(val genericName : String, val cS : ClassSymbol) extends Symbol {
+    override def getType = TGeneric(genericName, cS)
+  }
+  
   class MethodSymbol(val name: String, val classSymbol: ClassSymbol) extends Symbol {
-    var params = Map[String,VariableSymbol]()
-    var members = Map[String,VariableSymbol]()
+    var params = Map[String, VariableSymbol]()
+    var members = Map[String, VariableSymbol]()
     var argList: List[VariableSymbol] = Nil
-    var overridden : Option[MethodSymbol] = None
+    var overridden: Option[MethodSymbol] = None
 
-    def overrides(ms : MethodSymbol) : Boolean = overridden match {
-      case None => false
+    def overrides(ms: MethodSymbol): Boolean = overridden match {
+      case None                   => false
       case Some(pms) if pms == ms => true
-      case Some(pms) => pms.overrides(ms)
+      case Some(pms)              => pms.overrides(ms)
     }
 
     def lookupVar(n: String): Option[VariableSymbol] = {
       members.get(n) orElse
-      params.get(n) orElse
-      classSymbol.lookupVar(n)
+        params.get(n) orElse
+        classSymbol.lookupVar(n)
     }
   }
 

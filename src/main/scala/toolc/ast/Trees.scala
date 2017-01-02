@@ -13,7 +13,7 @@ object Trees {
   case class Identifier(value: String) extends Tree with Symbolic[Symbol] with Typed {
     override def getType: Type = getSymbol match {
       case cs: ClassSymbol =>
-        TClass(cs)
+        cs.getType
 
       case ms: MethodSymbol =>
         sys.error("Requesting type of a method identifier.")
@@ -143,13 +143,13 @@ object Trees {
   }
   // Object-oriented expressions
   case class This() extends ExprTree with Symbolic[ClassSymbol] {
-    def getType = TClass(getSymbol)
+    def getType = getSymbol.getType
   }
   case class MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) extends ExprTree {
     def getType = {
       
       obj.getType match {
-        case TClass(s) => {
+        case TClass(s, _) => {
           s.lookupMethod(meth.value) match {
             case Some(m) => {
                 for((a, m) <- args zip m.argList) {
@@ -168,7 +168,7 @@ object Trees {
   }
   case class New(tpe: Identifier, gen: Option[ObjectTypeTree]) extends ExprTree {
     def getType = tpe.getType match {
-      case t@TClass(_) => t
+      case t@TClass(_, _) => t // TODO
       case other => TError
     }
   }

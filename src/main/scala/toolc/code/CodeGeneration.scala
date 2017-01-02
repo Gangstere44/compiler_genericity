@@ -378,7 +378,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
 
           obj.getType match {
-            case TClass(c) => {
+            case TClass(c, _) => { // TODO
               c.lookupMethod(meth.value) match {
                 case Some(m) => {
                   ch << InvokeVirtual(c.name, meth.value, tmpArg + typeToDescr(m.getType))
@@ -393,7 +393,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case New(tpe, _) => { // TODO
 
           tpe.getType match {
-            case TClass(c) => {
+            case TClass(c, _) => { // TODO
               ch << DefaultNew(c.name)
             }
             case _ => error("try to 'new' a primary type", expr)
@@ -445,7 +445,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case TBoolean  => "Z"
         case TString   => "Ljava/lang/String;"
         case TIntArray => "[I"
-        case TClass(c) => "L" + c.name + ";"
+        case TClass(c, _) => "L" + c.name + ";" // TODO
 
         case _ =>
           error("unknown type in code gen")
