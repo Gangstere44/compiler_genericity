@@ -77,8 +77,8 @@ object Symbols {
     }
   }
   
-  class GenericSymbol(val genericName : String, val cS : ClassSymbol) extends Symbol {
-    override def getType = TGeneric(genericName, cS)
+  class GenericSymbol(val name : String, val cS : ClassSymbol) extends Symbol {
+    override def getType = TGeneric(name, cS)
   }
   
   class MethodSymbol(val name: String, val classSymbol: ClassSymbol) extends Symbol {

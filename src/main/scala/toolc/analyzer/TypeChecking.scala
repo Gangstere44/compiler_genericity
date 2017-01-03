@@ -60,7 +60,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(rhs, TInt)
         case Equals(lhs, rhs) =>
           lhs.getType match {
-            case TClass(_) => {
+            case TClass(_, _) => { // TODO
               tcExpr(lhs, lhs.getType)
               tcExpr(rhs, rhs.getType)
             }
@@ -101,7 +101,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         case MethodCall(obj, meth, args) => {
           tcExpr(obj, obj.getType)
           obj.getType match {
-            case TClass(s) =>
+            case TClass(s, _) => // TODO
               meth.setSymbol(s)
             case _ => error("Call method on a wrong type", obj)
 

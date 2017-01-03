@@ -173,14 +173,17 @@ object NameAnalysis extends Pipeline[Program, Program] {
             val method: MethodSymbol = new MethodSymbol(meth.id.value, cS);
             meth.setSymbol(method)
             meth.id.setSymbol(method)
+            method.setType(constructTypeSymbol(cS, meth.retType))
 
+            /*
             meth.retType match {
-              case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
+              case ClassType(t, _) => global.lookupClass(t.value) match {
                 case Some(c) => method.setType(c.getType)
                 case None    => method.setType(Types.TError)
               }
               case _ => method.setType(meth.retType.getType) // TYPE
             }
+						*/
 
             // add the arguments of a method
             for (argMeth <- meth.args) {
@@ -190,14 +193,17 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 val argS: VariableSymbol = new VariableSymbol(argMeth.id.value)
                 argMeth.setSymbol(argS)
                 argMeth.id.setSymbol(argS)
+                argS.setType(constructTypeSymbol(cS, argMeth.tpe))
 
+                /*
                 argMeth.tpe match {
-                  case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
+                  case ClassType(t, _) => global.lookupClass(t.value) match { 
                     case Some(c) => argS.setType(c.getType)
                     case None    => argS.setType(Types.TError)
                   }
                   case _ => argS.setType(argMeth.tpe.getType) // TYPE
                 }
+                */
 
                 method.params += (argS.name -> argS)
                 method.argList = method.argList.+:(argS)
@@ -214,14 +220,17 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 val varS = new VariableSymbol(varMeth.id.value)
                 varMeth.setSymbol(varS)
                 varMeth.id.setSymbol(varS)
+                varS.setType(constructTypeSymbol(cS, varMeth.tpe))
 
+                /*
                 varMeth.tpe match {
-                  case ClassType(t, _) => global.lookupClass(t.value) match { // TODO
+                  case ClassType(t, _) => global.lookupClass(t.value) match { 
                     case Some(c) => varS.setType(c.getType)
                     case None    => varS.setType(Types.TError)
                   }
                   case _ => varS.setType(varMeth.tpe.getType) // TYPE
                 }
+                */
 
                 method.members += (varS.name -> varS)
               }
