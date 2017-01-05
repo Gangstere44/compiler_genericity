@@ -22,7 +22,7 @@ object Main {
         rec(xs)
 
       case f :: xs =>
-        files  ::= new File(f)
+        files ::= new File(f)
         rec(xs)
 
       case _ =>
@@ -31,13 +31,13 @@ object Main {
     rec(args.toList)
 
     if (files.size != 1) {
-      reporter.fatal("Exactly one file expected, "+files.size+" file(s) given.")
+      reporter.fatal("Exactly one file expected, " + files.size + " file(s) given.")
     }
 
     Context(reporter = reporter, files = files, outDir = outDir)
   }
 
-/*
+  /*
  * // main code generation
   def main(args: Array[String]) {
     val ctx = processOptions(args)
@@ -54,7 +54,7 @@ object Main {
   }
   * 
   */
-    
+
   /*
    // main parser
    def main(args: Array[String]) {
@@ -65,7 +65,8 @@ object Main {
     println(Printer(ast))
   }
   */
-  
+
+  /*
   //main name analysis
   def main(args: Array[String]) {
     val ctx = processOptions(args)
@@ -73,5 +74,17 @@ object Main {
     val ast = pipeline.run(ctx)(ctx.files.head)
     ctx.reporter.terminateIfErrors()
     println(Printer(ast, true))
+  } 
+  * 
+  */
+
+  // main type check
+  def main(args: Array[String]) {
+    val ctx = processOptions(args)
+    val pipeline = Lexer andThen Parser andThen NameAnalysis andThen TypeChecking
+    val ast = pipeline.run(ctx)(ctx.files.head)
+    ctx.reporter.terminateIfErrors()
+    println(Printer(ast, true))
+
   }
 }

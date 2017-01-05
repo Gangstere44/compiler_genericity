@@ -58,35 +58,14 @@ object TypeChecking extends Pipeline[Program, Program] {
         case LessThan(lhs, rhs) =>
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
-        case Equals(lhs, rhs) =>
-          lhs.getType match {
-            case TClass(_, _) => { // TODO
-              tcExpr(lhs, lhs.getType)
-              tcExpr(rhs, rhs.getType)
-            }
-            case TInt => {
-              tcExpr(lhs, TInt)
-              tcExpr(rhs, TInt)
-            }
-            case TBoolean => {
-              tcExpr(lhs, TBoolean)
-              tcExpr(rhs, TBoolean)
-            }
-            case TString => {
-              tcExpr(lhs, TString)
-              tcExpr(rhs, TString)
-            }
-            case TIntArray => {
-              tcExpr(lhs, TIntArray)
-              tcExpr(rhs, TIntArray)
-            }
-            case TUntyped => {
-              ctx.reporter.error("untype element", lhs)
-            }
-            case TError => {
-              ctx.reporter.error("error element", rhs)
-            }
+        case Equals(lhs, rhs) => {
+          tcExpr(lhs, TObject, TInt, TIntArray, TString, TBoolean)
+          tcExpr(rhs, TObject, TInt, TIntArray, TString, TBoolean)
+          (lhs.getType, rhs.getType) match {
+            case (TClass(_, _) | TGeneric(_, _), TClass(_, _) | TGeneric(_, _)) =>
+            case (t1: Type, t2: Type) => if (!t1.equals(t2)) error("Type error: Comparing '" + t1.toString() + "' with '" + t2.toString() + "'")
           }
+        }
         case ArrayRead(arr, ind) => {
           tcExpr(arr, TIntArray)
           tcExpr(ind, TInt)
@@ -98,16 +77,26 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(size, TInt)
         }
         case This() =>
-        case MethodCall(obj, meth, args) => {
-          tcExpr(obj, obj.getType)
-          obj.getType match {
-            case TClass(s, _) => // TODO
-              meth.setSymbol(s)
-            case _ => error("Call method on a wrong type", obj)
 
+        case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => {
+          tcExpr(obj, obj.getType)
+
+          // Also adds missing symbols to methods in MethodCalls
+
+          obj.getType match {
+            case TClass(cS, optType) => {
+              cS.lookupMethod(meth.value) match {
+                case Some(methodSymbol) => {
+                  meth.setSymbol(methodSymbol)
+                }
+                case None => error("Type error: Method '" + meth.value + "' does not exist for class '" + cS.name + "'", meth)
+              }
+            }
+            case _ => error("Type error: method call on non-class type " + obj.getType)
           }
         }
-        case New(tpe, _)         => // TODO
+
+        case New(tpe, _)      =>
         case StringLit(value) =>
         case IntLit(value)    =>
         case True()           =>
