@@ -301,7 +301,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     def setCSymbols(klass: ClassDecl, gs: GlobalScope): Unit = {
       val classSym = gs.lookupClass(klass.id.value).get
       for (varDecl <- klass.vars) {
-        setTypeSymbol(varDecl.tpe, gs)
+        setTypeSymbol(varDecl.tpe, classSym, gs)
       }
       klass.methods.foreach(setMSymbols(_, gs, classSym))
     }
@@ -311,14 +311,14 @@ object NameAnalysis extends Pipeline[Program, Program] {
       val methSym = cs.lookupMethod(meth.id.value).get
 
       for (argDecl <- meth.args) {
-        setTypeSymbol(argDecl.tpe, gs)
+        setTypeSymbol(argDecl.tpe, cs, gs)
       }
 
       for (varDecl <- meth.vars) {
-        setTypeSymbol(varDecl.tpe, gs)
+        setTypeSymbol(varDecl.tpe, cs, gs)
       }
 
-      setTypeSymbol(meth.retType, gs)
+      setTypeSymbol(meth.retType, cs, gs)
 
       meth.stats.foreach { x => setSSymbols(x)(gs, Option(methSym)) }
 
@@ -431,13 +431,22 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     }
 
-    def setTypeSymbol(tpe: TypeTree, gs: GlobalScope): Unit = {
+    def setTypeSymbol(tpe: TypeTree, currentClassSym: ClassSymbol, gs: GlobalScope): Unit = {
       tpe match {
-        case ClassType(id, _) => { // TODO
-          val cS = gs.lookupClass(id.value)
-          cS match {
-            case Some(c) => id.setSymbol(c)
-            case None    => error("Undeclared identifier: " + id.value + ".", id)
+        case ClassType(id, g) => {
+          gs.lookupClass(id.value) match {
+            case Some(c) => {
+              id.setSymbol(c)
+              if (g.isDefined) {
+                setTypeSymbol(g.get, currentClassSym, gs)
+              }
+            }
+            case None => {
+              currentClassSym.lookupGen(id.value) match {
+                case Some(gSym) => id.setSymbol(gSym)
+                case None       => error("Undeclared identifier: " + id.value + ".", id)
+              }
+            }
           }
         }
 
