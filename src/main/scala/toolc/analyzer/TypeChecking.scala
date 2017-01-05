@@ -107,7 +107,7 @@ object TypeChecking extends Pipeline[Program, Program] {
 
       if (!expectedTps.toList.exists(expr.getType.isSubTypeOf)) {
 
-        error("Type error: Expected: " + expectedTps.mkString(" or ") + s", found: ${expr.getType}", expr)
+        error("Type error: Expected: " + expectedTps.map { x => x.toStringRec(Some(x)) }.mkString(" or ") + s", found: ${expr.getType.toStringRec(Some(expr.getType))}", expr)
       }
 
     }

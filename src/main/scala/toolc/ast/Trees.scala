@@ -14,6 +14,9 @@ object Trees {
     override def getType: Type = getSymbol match {
       case cs: ClassSymbol =>
         cs.getType
+        
+      case gs: GenericSymbol =>
+        gs.getType
 
       case ms: MethodSymbol =>
         sys.error("Requesting type of a method identifier.")

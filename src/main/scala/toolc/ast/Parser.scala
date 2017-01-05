@@ -11,6 +11,8 @@ import CFGrammar._
 import grammarcomp.parsing._
 import GrammarDSL._
 
+// TODO renvoyer erreur si pas de généricté alors que demandé + extends Collection[T]
+
 object Parser extends Pipeline[Iterator[Token], Program] {
 
   val toolGrammar = Grammar('Program, List[Rules[Token]](

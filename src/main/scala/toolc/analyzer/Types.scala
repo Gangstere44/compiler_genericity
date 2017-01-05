@@ -10,6 +10,13 @@ object Types {
 
   sealed abstract class Type {
     def isSubTypeOf(tpe: Type): Boolean = tpe == this
+    def toStringRec(curType: Option[Type]): String = {
+      curType match {
+        case Some(TClass(cs, optg)) => if (optg.isDefined) s"${cs.name}[${toStringRec(optg)}]" else s"${cs.name}"
+        case Some(r)                => r.toString()
+        case None                   => ""
+      }
+    }
   }
 
   case object TError extends Type {
@@ -74,10 +81,12 @@ object Types {
         }
       }
 
-      checkSub(classSymbol) && checkTypeGen(tpe, classSymbol.getType)
+      (tpe eq TObject) ||
+        (checkSub(classSymbol) && checkTypeGen(tpe, this))
     }
 
     override def toString = classSymbol.name
+
   }
 
   // in Fact[T] , TGeneric(Fact[T]) -> interesting for T only, T is TGeneric

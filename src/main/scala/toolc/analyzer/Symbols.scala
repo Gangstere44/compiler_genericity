@@ -55,7 +55,7 @@ object Symbols {
 
   class ClassSymbol(val name: String) extends Symbol {
     override def getType = {
-      TClass(this, None) // TODO 
+      TClass(this, if(gen.isEmpty) None else Some(gen.toList(0)._2.getType) ) // TODO multi gen
     }
     override def setType(t: Type) = sys.error("Cannot set the symbol of a ClassSymbol")
 
