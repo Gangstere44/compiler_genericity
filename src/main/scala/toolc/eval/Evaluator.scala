@@ -271,7 +271,7 @@ class Evaluator(ctx: Context, prog: Program) {
 
   def findMethod(cd: ClassDecl, name: String): MethodDecl = {    
     cd.methods.find(_.id.value == name).orElse(
-      cd.parent.map(p => findMethod(findClass(p.value), name))).getOrElse(fatal("Unknown method " + cd.id + "." + name))
+      cd.parent.map(p => findMethod(findClass(p.id.value), name))).getOrElse(fatal("Unknown method " + cd.id + "." + name))
 
   }
 
@@ -281,7 +281,7 @@ class Evaluator(ctx: Context, prog: Program) {
 
   def fieldsOfClass(cl: ClassDecl): Set[String] = {
     cl.vars.map(_.id.value).toSet ++
-      cl.parent.map(p => fieldsOfClass(findClass(p.value))).getOrElse(Set())
+      cl.parent.map(p => fieldsOfClass(findClass(p.id.value))).getOrElse(Set())
   }
 
   sealed abstract class Value {

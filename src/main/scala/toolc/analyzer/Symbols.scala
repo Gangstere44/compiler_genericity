@@ -59,17 +59,17 @@ object Symbols {
     }
     override def setType(t: Type) = sys.error("Cannot set the symbol of a ClassSymbol")
 
-    var parent: Option[ClassSymbol] = None
+    var parent: Option[TClass] = None
     var methods = Map[String, MethodSymbol]()
     var members = Map[String, VariableSymbol]()
     var gen = Map[String, GenericSymbol]()
 
     def lookupMethod(n: String): Option[MethodSymbol] = {
-      methods.get(n) orElse parent.flatMap(_.lookupMethod(n))
+      methods.get(n) orElse parent.flatMap(_.classSymbol.lookupMethod(n))
     }
 
     def lookupVar(n: String): Option[VariableSymbol] = {
-      members.get(n) orElse parent.flatMap(_.lookupVar(n))
+      members.get(n) orElse parent.flatMap(_.classSymbol.lookupVar(n))
     }
     
     def lookupGen(n: String): Option[GenericSymbol] = {

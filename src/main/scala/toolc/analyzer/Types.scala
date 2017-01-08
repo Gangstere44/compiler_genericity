@@ -46,7 +46,7 @@ object Types {
   }
 
   case class TClass(classSymbol: ClassSymbol, genType: Option[Type]) extends Type {
-    // TODO check equality between genericity
+
     override def isSubTypeOf(tpe: Type): Boolean = {
 
       def checkSub(cl: ClassSymbol): Boolean = {
@@ -55,7 +55,7 @@ object Types {
         else {
           cl.parent match {
             case Some(p) =>
-              checkSub(p)
+              checkSub(p.classSymbol)
             case None => false
           }
         }

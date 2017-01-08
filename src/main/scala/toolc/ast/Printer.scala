@@ -73,9 +73,10 @@ object Printer {
           "}",
           ""
         )
+        
       case ClassDecl(id, gen, parent, vars, methods) =>
         val optG: Document = gen map { "[" <:> rec(_) <:> "]" } getOrElse "" // change
-        val optP: Document = parent map { " extends " <:> rec(_) } getOrElse ""
+        val optP: Document = parent map { " extends " <:> rec(_)} getOrElse ""
         Stacked(
           "class " <:> rec(id) <:> optG <:> optP <:> " {",
           Indented(Stacked(

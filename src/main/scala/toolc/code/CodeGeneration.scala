@@ -22,7 +22,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
     def generateClassFile(ct: ClassDecl, shortFileName: String, outDir: String): Unit = {
       val cs = ct.getSymbol
-      val cf = new ClassFile(cs.name, cs.parent.map(_.name))
+      val cf = new ClassFile(cs.name, cs.parent.map(_.classSymbol.name))
       cf.setSourceFile(shortFileName)
       cf.addDefaultConstructor
 

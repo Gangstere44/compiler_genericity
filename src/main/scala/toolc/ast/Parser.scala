@@ -67,7 +67,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     'ClassDecls ::= 'ClassDeclaration ~ 'ClassDecls | epsilon(),
     'ClassDeclaration ::= CLASS() ~ 'Identifier ~ 'ClassGenericity ~ 'OptExtends ~ 'ClassBody, // change
     'ClassGenericity ::= LBRACKET() ~ 'Identifier ~ RBRACKET() | epsilon(), // change
-    'OptExtends ::= epsilon() | EXTENDS() ~ 'Identifier,
+    'OptExtends ::= epsilon() | EXTENDS() ~ 'Identifier ~ 'TypeGenericity,
     'ClassBody ::= LBRACE() ~ 'VarDecs ~ 'MethodDecs ~ RBRACE(),
     'VarDecs ::= 'VarDeclaration ~ 'VarDecs | epsilon(),
     'VarDeclaration ::= VAR() ~ 'Param ~ SEMICOLON(),

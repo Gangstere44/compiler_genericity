@@ -34,7 +34,7 @@ class ASTConstructor {
         ClassDecl(
           constructId(id),
           None,
-          constructOption(optextends, constructId),
+          None, //constructOption(optextends, constructId), => not used in LL1
           constructList(vardecls, constructVarDecl),
           constructList(methoddecls, constructMethodDecl)
         ).setPos(cls)

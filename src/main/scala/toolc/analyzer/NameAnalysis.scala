@@ -49,12 +49,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
         clSym = global.classes(cls.id.value)
         par <- cls.parent
       } yield {
-        global.lookupClass(par.value) match {
+        global.lookupClass(par.id.value) match {
           case None =>
-            error(s"Class ${clSym.name} extends class ${par.value} which is not defined.", par)
+            error(s"Class ${clSym.name} extends class ${par.id.value} which is not defined.", par)
           case Some(parSym) =>
-            clSym.parent = Some(parSym)
-            par.setSymbol(parSym)
+            clSym.parent = Some(Types.TClass(parSym, par.gen match {
+              case Some(g) => Some(constructTypeRec(clSym, g))
+              case None    => None
+            }))
+            setTypeSymbol(par, Some(clSym), global)
         }
       }
 
@@ -66,7 +69,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           curr.parent match {
             case None           => List(curr)
             case Some(`clsSym`) => List(curr, clsSym)
-            case Some(p)        => curr :: mkChain(p)
+            case Some(p)        => curr :: mkChain(p.classSymbol)
           }
         }
 
@@ -76,6 +79,29 @@ object NameAnalysis extends Pipeline[Program, Program] {
           fatal("Cyclic inheritance: " + chain.map(_.name).mkString(" -> "))
         }
 
+      }
+
+      def constructTypeRec(currentCSym: ClassSymbol, cur: TypeTree): Types.Type = {
+        cur match {
+          case c: ClassType => {
+            global.lookupClass(c.id.value) match {
+              case Some(cSym: ClassSymbol) => {
+                Types.TClass(cSym, c.gen.map { x => constructTypeRec(currentCSym, x) })
+              }
+              case None => {
+                currentCSym.lookupGen(c.id.value) match {
+                  case Some(gS) => {
+                    c.id.setSymbol(gS)
+                    gS.getType
+                  }
+                  case None => Types.TError
+
+                }
+              }
+            }
+          }
+          case c => c.getType
+        }
       }
 
       // We now know that every class is unique and the inheritance graph is
@@ -104,29 +130,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       def collectInClass(c: ClassDecl, mapSymToDecl: Map[ClassSymbol, ClassDecl]): Unit = {
 
-        def constructTypeSymbol(currentCSym: ClassSymbol, cur: TypeTree): Types.Type = {
-          cur match {
-            case c: ClassType => {
-              global.lookupClass(c.id.value) match {
-                case Some(cSym: ClassSymbol) => {
-                  Types.TClass(cSym, c.gen.map { x => constructTypeSymbol(currentCSym, x) })
-                }
-                case None => {
-                  currentCSym.lookupGen(c.id.value) match {
-                    case Some(gS) => {
-                      c.id.setSymbol(gS)
-                      gS.getType
-                    }
-                    case None => Types.TError
-
-                  }
-                }
-              }
-            }
-            case c => c.getType
-          }
-        }
-
         def collectInternal(cS: ClassSymbol): Unit = {
           done = done.+(cS.name)
 
@@ -135,7 +138,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           // add the class variable of the parent to the class scope
           for (varClass <- parentDecl.vars) {
             val varS = new VariableSymbol(varClass.id.value);
-            varS.setType(constructTypeSymbol(cS, varClass.tpe))
+            varS.setType(constructTypeRec(cS, varClass.tpe))
             /*
             varClass.tpe match {
               case ClassType(t, g) => global.lookupClass(t.value) match { 
@@ -174,7 +177,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             val method: MethodSymbol = new MethodSymbol(meth.id.value, cS);
             meth.setSymbol(method)
             meth.id.setSymbol(method)
-            method.setType(constructTypeSymbol(cS, meth.retType))
+            method.setType(constructTypeRec(cS, meth.retType))
 
             /*
             meth.retType match {
@@ -194,7 +197,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 val argS: VariableSymbol = new VariableSymbol(argMeth.id.value)
                 argMeth.setSymbol(argS)
                 argMeth.id.setSymbol(argS)
-                argS.setType(constructTypeSymbol(cS, argMeth.tpe))
+                argS.setType(constructTypeRec(cS, argMeth.tpe))
 
                 /*
                 argMeth.tpe match {
@@ -221,7 +224,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 val varS = new VariableSymbol(varMeth.id.value)
                 varMeth.setSymbol(varS)
                 varMeth.id.setSymbol(varS)
-                varS.setType(constructTypeSymbol(cS, varMeth.tpe))
+                varS.setType(constructTypeRec(cS, varMeth.tpe))
 
                 /*
                 varMeth.tpe match {
@@ -268,9 +271,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
         def collectParent(parentSymbol: ClassSymbol): Unit = {
           parentSymbol.parent match {
             case Some(par) => {
-              collectParent(par)
-              parentSymbol.members = parentSymbol.members.++(par.members)
-              parentSymbol.methods = parentSymbol.methods.++(par.methods)
+              collectParent(par.classSymbol)
+              parentSymbol.members = parentSymbol.members.++(par.classSymbol.members)
+              parentSymbol.methods = parentSymbol.methods.++(par.classSymbol.methods)
               if (!done.contains(parentSymbol.name)) {
                 collectInternal(parentSymbol)
               }
@@ -377,7 +380,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           gs.lookupClass(tpe.value) match {
             case Some(c) => {
               tpe.setSymbol(c)
-              if(optGen.isDefined) {
+              if (optGen.isDefined) {
                 setTypeSymbol(optGen.get, ms.map { x => x.classSymbol }, gs)
               }
             }
@@ -450,7 +453,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case None => {
               currentClassSym match {
                 case Some(curCSym) => {
-                   curCSym.lookupGen(id.value) match {
+                  curCSym.lookupGen(id.value) match {
                     case Some(gSym) => id.setSymbol(gSym)
                     case None       => error("Undeclared identifier: " + id.value + ".", id)
                   }

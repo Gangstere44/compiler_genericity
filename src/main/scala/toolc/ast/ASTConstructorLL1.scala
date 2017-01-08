@@ -17,12 +17,12 @@ class ASTConstructorLL1 extends ASTConstructor {
         ClassDecl(
           constructId(id),
           constructOption(clgen, constructId), // change
-          constructOption(optextends, constructId),
+          constructParent(optextends),
           constructList(vardecls, constructVarDecl),
           constructList(methoddecls, constructMethodDecl)).setPos(cls)
     }
   }
- 
+
   override def constructOption[A](ptree: NodeOrLeaf[Token], constructor: NodeOrLeaf[Token] => A): Option[A] = {
     ptree match {
       case Node(_, List()) => None
@@ -32,7 +32,18 @@ class ASTConstructorLL1 extends ASTConstructor {
         Some(constructor(t))
     }
   }
-  
+
+  def constructParent(optextends: NodeOrLeaf[Token]): Option[ClassType] = {
+    optextends match {
+      case Node(_, List(_, id, g)) => {
+        Some(ClassType(constructId(id), constructOption(g, constructTypeObject)))
+      }
+      case Node(_, List()) => {
+        None
+      }
+    }
+  }
+
   /* original
   override def constructType(ptree: NodeOrLeaf[Token]): TypeTree = {
     ptree match {
@@ -51,8 +62,8 @@ class ASTConstructorLL1 extends ASTConstructor {
     }
   }
   */
-  
-    override def constructType(ptree: NodeOrLeaf[Token]): TypeTree = {
+
+  override def constructType(ptree: NodeOrLeaf[Token]): TypeTree = {
     ptree match {
       case Node('Type ::= _, List(Leaf(i @ INT()), ti)) =>
         constructTypeInt(ti).setPos(i)
@@ -71,16 +82,16 @@ class ASTConstructorLL1 extends ASTConstructor {
         IntArrayType()
     }
   }
-  
+
   // add
-  def constructTypeObject(ptree: NodeOrLeaf[Token]) : ObjectTypeTree = {
+  def constructTypeObject(ptree: NodeOrLeaf[Token]): ObjectTypeTree = {
     ptree match {
       case Node('TypeObject ::= _, List(Leaf(s @ STRING()))) =>
         StringType().setPos(s)
       case Node('TypeObject ::= List('Identifier, 'TypeGenericity), List(id, vargen)) =>
         val pid = constructId(id)
         val gen = constructOption(vargen, constructTypeObject)
-        
+
         ClassType(pid, gen).setPos(pid)
     }
   }
@@ -161,7 +172,7 @@ class ASTConstructorLL1 extends ASTConstructor {
         val e1 = constructExpr(tn)
         e1.setPos(e1)
       }
-      case Node('TermNewBIS ::= List('Identifier, 'TypeGenericity ,LPAREN(), RPAREN()), List(tn, tg,_, _)) => {
+      case Node('TermNewBIS ::= List('Identifier, 'TypeGenericity, LPAREN(), RPAREN()), List(tn, tg, _, _)) => {
         val id = constructId(tn)
         val gen = constructOption(tg, constructTypeObject) // change
         New(id, gen).setPos(id)
@@ -188,8 +199,6 @@ class ASTConstructorLL1 extends ASTConstructor {
   }
 
   def constructListOption(ptreeLeft: ExprTree, ptreeRight: NodeOrLeaf[Token]): Option[ExprTree] = {
-    // println("---")
-    // println(ptreeLeft + " " + ptreeRight)
     ptreeRight match {
       case Node('TermListOR ::= List(_, 'TermOR, 'TermListOR), List(op, to, tlo)) => {
         val e2 = constructExpr(to)

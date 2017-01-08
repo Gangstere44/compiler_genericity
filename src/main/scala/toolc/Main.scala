@@ -38,7 +38,7 @@ object Main {
   }
 
   /*
- * // main code generation
+  // main code generation
   def main(args: Array[String]) {
     val ctx = processOptions(args)
 
@@ -54,6 +54,8 @@ object Main {
   }
   * 
   */
+  
+  
 
   /*
    // main parser
@@ -65,6 +67,7 @@ object Main {
     println(Printer(ast))
   }
   */
+  
 
   /*
   //main name analysis
@@ -74,10 +77,10 @@ object Main {
     val ast = pipeline.run(ctx)(ctx.files.head)
     ctx.reporter.terminateIfErrors()
     println(Printer(ast, true))
-  } 
-  * 
-  */
+  }*/ 
+  
 
+  
   // main type check
   def main(args: Array[String]) {
     val ctx = processOptions(args)
@@ -87,4 +90,5 @@ object Main {
     println(Printer(ast, true))
 
   }
+  
 }
