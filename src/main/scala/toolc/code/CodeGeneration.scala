@@ -388,13 +388,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
                   ch << InvokeVirtual(c.name, meth.value, tmpArg + typeToDescr(m.getType))
                   m.getType match {
                     case TGeneric(_, _) => {
-                      ch << CheckCast(typeToDescr(gen match {
-                        case Some(t) => t
+                      ch << CheckCast(gen match {
+                        case Some(t) => t.toString()
                         case None => {
                           error("Invalid method call, linked to genericity", meth)
-                          TError
+                          ""
                         }
-                      }))
+                      })
                     }
                     case _ =>
                   }
