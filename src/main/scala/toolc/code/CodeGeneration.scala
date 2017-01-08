@@ -370,11 +370,15 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
           cGenExpr(obj)
           args.foreach { a => cGenExpr(a) }
+          val methSym: MethodSymbol = meth.getSymbol match {
+            case mS: MethodSymbol => mS
+            case _                => fatal("meth id hasn't MethodSymbol attached", meth)
+          }
           val tmpArg = {
             if (args.isEmpty)
               "()"
             else
-              "(" + (args.map { a => typeToDescr(a.getType) }.reduce(_ + _)) + ")"
+              "(" + (methSym.argList.map { a => typeToDescr(a.getType) }.reduce(_ + _)) + ")"
           }
 
           obj.getType match {
@@ -392,7 +396,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
                         }
                       }))
                     }
-                    case _              =>
+                    case _ =>
                   }
 
                 }
@@ -403,10 +407,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
 
         }
-        case New(tpe, _) => { 
+        case New(tpe, _) => {
 
           tpe.getType match {
-            case TClass(c, _) => { 
+            case TClass(c, _) => {
               ch << DefaultNew(c.name)
             }
             case _ => error("try to 'new' a primary type", expr)
@@ -458,7 +462,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case TBoolean       => "Z"
         case TString        => "Ljava/lang/String;"
         case TIntArray      => "[I"
-        case TClass(c, _)   => "L" + c.name + ";" 
+        case TClass(c, _)   => "L" + c.name + ";"
         case TGeneric(_, _) => "Ljava/lang/Object;"
 
         case _ =>
