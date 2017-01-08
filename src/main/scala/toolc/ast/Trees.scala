@@ -14,7 +14,7 @@ object Trees {
     override def getType: Type = getSymbol match {
       case cs: ClassSymbol =>
         cs.getType
-        
+
       case gs: GenericSymbol =>
         gs.getType
 
@@ -37,7 +37,7 @@ object Trees {
   case class MainObject(id: Identifier, stats: List[StatTree])
     extends DefTree with Symbolic[MainSymbol]
   // change
-  case class ClassDecl(id: Identifier, gen: Option[Identifier], parent: Option[ClassType] , vars: List[VarDecl], methods: List[MethodDecl])
+  case class ClassDecl(id: Identifier, gen: Option[Identifier], parent: Option[ClassType], vars: List[VarDecl], methods: List[MethodDecl])
     extends DefTree with Symbolic[ClassSymbol]
   case class VarDecl(tpe: TypeTree, id: Identifier)
     extends DefTree with Symbolic[VariableSymbol]
@@ -47,7 +47,7 @@ object Trees {
                         vars: List[VarDecl],
                         stats: List[StatTree],
                         retExpr: ExprTree)
-    extends DefTree with Symbolic[MethodSymbol]
+      extends DefTree with Symbolic[MethodSymbol]
   case class Formal(tpe: TypeTree, id: Identifier)
     extends DefTree with Symbolic[VariableSymbol]
 
@@ -68,10 +68,9 @@ object Trees {
   case class StringType() extends ObjectTypeTree {
     override def getType = TString
   }
-  case class ClassType(id: Identifier, gen : Option[ObjectTypeTree]) extends ObjectTypeTree{
+  case class ClassType(id: Identifier, gen: Option[ObjectTypeTree]) extends ObjectTypeTree {
     override def getType = id.getType
   }
-  
 
   // Statements
   sealed trait StatTree extends Tree
@@ -102,16 +101,16 @@ object Trees {
       lhs.getType match {
         case TInt => {
           rhs.getType match {
-            case TInt => TInt
+            case TInt    => TInt
             case TString => TString
-            case _ => TError
+            case _       => TError
           }
         }
         case TString => {
           rhs.getType match {
-            case TInt => TString
+            case TInt    => TString
             case TString => TString
-            case _ => TError
+            case _       => TError
           }
         }
         case _ => TError
@@ -150,17 +149,21 @@ object Trees {
   }
   case class MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) extends ExprTree {
     def getType = {
-      
+
       obj.getType match {
-        case TClass(s, _) => {
+        case TClass(s, gen) => {
           s.lookupMethod(meth.value) match {
             case Some(m) => {
-                for((a, m) <- args zip m.argList) {
-                  if(!(a.getType eq m.getType)) {
-                    TError
-                  }
+              for ((a, m) <- args zip m.argList) {
+                if (!(a.getType eq m.getType)) {
+                  TError
                 }
-                m.getType
+              }
+
+              m.getType match {
+                case TGeneric(name, opt) => gen.getOrElse(TError)
+                case o                   => o
+              }
             }
             case None => TError
           }
@@ -170,10 +173,29 @@ object Trees {
     }
   }
   case class New(tpe: Identifier, gen: Option[ObjectTypeTree]) extends ExprTree {
-    def getType = tpe.getType match {
-      case t@TClass(_, _) => t // TODO
-      case other => TError
+    def getType = {
+
+      def helper(g: Option[ObjectTypeTree]): Option[Type] = {
+        g.flatMap { x =>
+          Some(
+            x match {
+              case ClassType(id, oObT) =>
+                id.getSymbol match {
+                  case cs: ClassSymbol => TClass(cs, helper(oObT))
+                  case _               => TError
+                }
+
+              case StringType() => TString
+            })
+        }
+      }
+
+      tpe.getType match {
+        case t @ TClass(cS, _) => TClass(cS, helper(gen))
+        case other             => TError
+      }
     }
+
   }
   // Literals
   case class IntLit(value: Int) extends ExprTree {

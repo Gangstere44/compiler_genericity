@@ -37,7 +37,7 @@ object Main {
     Context(reporter = reporter, files = files, outDir = outDir)
   }
 
-  /*
+  
   // main code generation
   def main(args: Array[String]) {
     val ctx = processOptions(args)
@@ -52,10 +52,6 @@ object Main {
 
     ctx.reporter.terminateIfErrors
   }
-  * 
-  */
-  
-  
 
   /*
    // main parser
@@ -80,7 +76,7 @@ object Main {
   }*/ 
   
 
-  
+  /*
   // main type check
   def main(args: Array[String]) {
     val ctx = processOptions(args)
@@ -89,6 +85,6 @@ object Main {
     ctx.reporter.terminateIfErrors()
     println(Printer(ast, true))
 
-  }
+  }*/
   
 }

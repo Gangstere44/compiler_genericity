@@ -130,7 +130,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             case Some(s) => {
               cGenStat(s)
             }
-            case None    =>
+            case None =>
           }
 
           ch << Label(endIfCond)
@@ -225,7 +225,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << Label(alreadyFalse)
         }
         case Or(lhs, rhs) => {
-          
+
           ch << ICONST_1
           cGenExpr(lhs)
 
@@ -378,22 +378,35 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
 
           obj.getType match {
-            case TClass(c, _) => { // TODO
+            case TClass(c, gen) => {
               c.lookupMethod(meth.value) match {
                 case Some(m) => {
                   ch << InvokeVirtual(c.name, meth.value, tmpArg + typeToDescr(m.getType))
+                  m.getType match {
+                    case TGeneric(_, _) => {
+                      ch << CheckCast(typeToDescr(gen match {
+                        case Some(t) => t
+                        case None => {
+                          error("Invalid method call, linked to genericity", meth)
+                          TError
+                        }
+                      }))
+                    }
+                    case _              =>
+                  }
+
                 }
-                case None => error("methode not found for object : " + c.name + " , in code gen", expr)
+                case None => error("method not found for object : " + c.name + " , in code gen", expr)
               }
             }
             case _ => error("try to call a method againt sth not an object", expr)
           }
 
         }
-        case New(tpe, _) => { // TODO
+        case New(tpe, _) => { 
 
           tpe.getType match {
-            case TClass(c, _) => { // TODO
+            case TClass(c, _) => { 
               ch << DefaultNew(c.name)
             }
             case _ => error("try to 'new' a primary type", expr)
@@ -441,11 +454,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     // Transforms a Tool type to the corresponding JVM type description
     def typeToDescr(t: Type): String = {
       t match {
-        case TInt      => "I"
-        case TBoolean  => "Z"
-        case TString   => "Ljava/lang/String;"
-        case TIntArray => "[I"
-        case TClass(c, _) => "L" + c.name + ";" // TODO
+        case TInt           => "I"
+        case TBoolean       => "Z"
+        case TString        => "Ljava/lang/String;"
+        case TIntArray      => "[I"
+        case TClass(c, _)   => "L" + c.name + ";" 
+        case TGeneric(_, _) => "Ljava/lang/Object;"
 
         case _ =>
           error("unknown type in code gen")

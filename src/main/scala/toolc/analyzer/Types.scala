@@ -10,12 +10,18 @@ object Types {
 
   sealed abstract class Type {
     def isSubTypeOf(tpe: Type): Boolean = tpe == this
-    def toStringRec(curType: Option[Type]): String = {
-      curType match {
-        case Some(TClass(cs, optg)) => if (optg.isDefined) s"${cs.name}[${toStringRec(optg)}]" else s"${cs.name}"
-        case Some(r)                => r.toString()
-        case None                   => ""
+
+    def toStringRec(): String = {
+
+      def toStringHelp(curType: Option[Type]): String = {
+        curType match {
+          case Some(TClass(cs, optg)) => if (optg.isDefined) s"${cs.name}[${toStringHelp(optg)}]" else s"${cs.name}"
+          case Some(r)                => r.toString()
+          case None                   => ""
+        }
       }
+
+      toStringHelp(Some(this))
     }
   }
 

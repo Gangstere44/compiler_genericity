@@ -82,7 +82,6 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(obj, obj.getType)
 
           // Also adds missing symbols to methods in MethodCalls
-
           obj.getType match {
             case TClass(cS, optType) => {
               cS.lookupMethod(meth.value) match {
@@ -96,7 +95,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           }
         }
 
-        case New(tpe, _)      =>
+        case New(tpe, gen)    =>
         case StringLit(value) =>
         case IntLit(value)    =>
         case True()           =>
@@ -107,7 +106,7 @@ object TypeChecking extends Pipeline[Program, Program] {
 
       if (!expectedTps.toList.exists(expr.getType.isSubTypeOf)) {
 
-        error("Type error: Expected: " + expectedTps.map { x => x.toStringRec(Some(x)) }.mkString(" or ") + s", found: ${expr.getType.toStringRec(Some(expr.getType))}", expr)
+        error("Type error: Expected: " + expectedTps.map { x => x.toStringRec() }.mkString(" or ") + s", found: ${expr.getType.toStringRec()}", expr)
       }
 
     }
