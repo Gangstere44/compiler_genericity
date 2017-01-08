@@ -86,7 +86,7 @@ object Types {
           case _                  => false
         }
       }
-
+       
       (tpe eq TObject) ||
         (checkSub(classSymbol) && checkTypeGen(tpe, this))
     }

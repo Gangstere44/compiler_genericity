@@ -389,7 +389,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
                   m.getType match {
                     case TGeneric(_, _) => {
                       ch << CheckCast(gen match {
-                        case Some(t) => t.toString()
+                        case Some(t) => t.toString() // TODO no checkast T
                         case None => {
                           error("Invalid method call, linked to genericity", meth)
                           ""

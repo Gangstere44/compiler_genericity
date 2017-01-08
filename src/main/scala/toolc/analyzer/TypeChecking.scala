@@ -21,11 +21,13 @@ object TypeChecking extends Pipeline[Program, Program] {
     def tcMethod(meth: MethodDecl): Unit = {
       meth.stats.foreach { s => tcStat(s) }
       tcExpr(meth.retExpr, meth.retType.getType)
+      /*
       (meth.args.reverse zip meth.getSymbol.argList).foreach { z =>
         if (!z._1.getSymbol.getType.isSubTypeOf(z._2.getType)) {
           error("Type error: Expected: " + z._2.getType.toString() + " OR one of its subtype, and found : " + z._1.getSymbol.getType.toString(), z._1)
         }
       }
+      */
     }
 
     /**
@@ -81,6 +83,8 @@ object TypeChecking extends Pipeline[Program, Program] {
         case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => {
           tcExpr(obj, obj.getType)
 
+          // TODO check args with meth.argList
+          
           // Also adds missing symbols to methods in MethodCalls
           obj.getType match {
             case TClass(cS, optType) => {
