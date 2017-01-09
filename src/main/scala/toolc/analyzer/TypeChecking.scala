@@ -83,27 +83,52 @@ object TypeChecking extends Pipeline[Program, Program] {
         case MethodCall(obj: ExprTree, meth: Identifier, argsMethCall: List[ExprTree]) => {
           tcExpr(obj, obj.getType)
 
+          def replaceGeneric(substitute: Type, cur: Type): Type = {
+            cur match {
+              case TGeneric(n, lS) => substitute
+              case TClass(cS, gen) => TClass(cS, gen.map { x => replaceGeneric(substitute, x) })
+              case TString         => TString
+              case _               => fatal("Non-object type in generic object")
+            }
+          }
+
           // Also adds missing symbols to methods in MethodCalls
           obj.getType match {
-            case TClass(cS, optType) => {
+            case objType@TClass(cS, optType) => {
 
               cS.lookupMethod(meth.value) match {
                 case Some(methodSymbol) => {
                   meth.setSymbol(methodSymbol)
 
+                  println("***")
+                  println(" parent : " + cS.parent.map { x => x.toStringRec() })
+                  println(optType.map { x => x.toStringRec() })
+                  methodSymbol.argList.foreach { x => println(x.getType.toStringRec()) }
+
                   val argListType = optType match {
                     case Some(genT) => {
-                      methodSymbol.argList.map(x => x.getType match {
-                        case TGeneric(n, ls) => genT
-                        case a               => a
-                      })
+                      
+                      def findGenericType(x : TClass, mS : Symbols.MethodSymbol) : Type = {
+                        if(x.classSymbol.name == mS.classSymbol.name) {
+                          x.genType.getOrElse(TError)
+                        } else {
+                          x.classSymbol.parent match {
+                            case Some(t) => findGenericType(t, mS)
+                            case None => TError
+                          }
+                        }
+                      }
+                      
+                      methodSymbol.argList.map(x => replaceGeneric(findGenericType(objType, methodSymbol), x.getType))
                     }
-                    case None => methodSymbol.argList.map(_.getType)
+                    case None       => methodSymbol.argList.map(_.getType)
                   }
+
+                  argListType.foreach { x => println(x.toStringRec()) }
 
                   argListType.reverse.zip(argsMethCall).foreach(z =>
                     if (!z._2.getType.isSubTypeOf(z._1)) {
-                      error("Type error: Expected: " + z._1.toString() + " OR one of its subtype, and found : " + z._2.getType.toString(), z._2)
+                      error("Type error: Expected: " + z._1.toStringRec() + " OR one of its subtype, and found : " + z._2.getType.toStringRec(), z._2)
                     })
                 }
                 case None => error("Type error: Method '" + meth.value + "' does not exist for class '" + cS.name + "'", meth)

@@ -2,7 +2,7 @@
 
 program Factorial {
     println(2);
-    println(new Collection[Number]().setA(new Number()));//.init(3));
+    println(new Test().test(1));
 }
 
 class Number {
@@ -46,10 +46,10 @@ class Collection[T] {
 		return b;
 	}
 	
-	def setA(newA : T) : String = {
+	def setA(newA : T) : T = {
 		a = newA;
 		println(32);
-		return "b43";
+		return a;
 	}
 	
 	def setB(newB : T) : T = {
@@ -57,6 +57,17 @@ class Collection[T] {
 		return b;
 	}
 	
+	
+	def tt(newC: T, newD: Int, newE: Bool) : Bool = {
+	
+		return true;
+	
+	}
+	
+
+}
+
+class A {
 
 }
 
@@ -65,11 +76,23 @@ class Test {
 	var col1 : Collection[Number];
 	var col2 : Collection[Number];
 	
+	var l1 : List[String];
+	var l2 : List[String];
+	var l3 : List[Collection[Number]];
+	var l4 : List[Collection[Double]];
+	var l5 : List[List[Double]];
+	
 	def test(a : Int) : Int = {
+		/*
+		println("test1");
 		println(1);
 		col1 = new Collection[Number]();
 		col2 = new Collection[Number]();
 		println(2);
+		
+		do(col1.tt(new Number(), 42, true));
+		
+		do(col1.init(new Number(), new Double()));
 		
 		do(col1.setA(new Number()));
 		do(col2.setA(new Number()));
@@ -77,6 +100,23 @@ class Test {
 		println(3);
 		
 		return (col1.getA().init(42) + col2.getA().init(33));
+		*/
+		
+		l1 = new List[String]();
+		l2 = new List[String]();
+		l3 = new List[Collection[Number]]();
+		l4 = new List[Collection[Double]]();
+		l5 = new List[List[Double]]();
+		
+		println("test 2");
+		
+		do(l1 == l2);
+		do(l3 == l4);
+		do(l3 == l5);
+		
+		do(l1.initBis(new Collection[String]()));
+		
+		return 43;
 	}
 		
 }
@@ -84,11 +124,9 @@ class Test {
 
 class List[Z] extends Collection[Collection[Z]] {
 
-	def initBis() : Bool = {
+	def initBis(in : Z) : Bool = {		
 		
-		var test : Z;
-		
-		do(this.setB(test));
+		do(this.setB(in));
 	
 		return true;
 	}
