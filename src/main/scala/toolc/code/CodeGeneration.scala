@@ -378,7 +378,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             if (args.isEmpty)
               "()"
             else
-              "(" + (methSym.argList.map { a => typeToDescr(a.getType) }.reduce(_ + _)) + ")"
+              "(" + (methSym.argList.reverse.map { a => typeToDescr(a.getType) }.reduce(_ + _)) + ")"
           }
 
           obj.getType match {
@@ -386,15 +386,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
               c.lookupMethod(meth.value) match {
                 case Some(m) => {
                   ch << InvokeVirtual(c.name, meth.value, tmpArg + typeToDescr(m.getType))
-                  m.getType match {
-                    case TGeneric(_, _) => {
-                      ch << CheckCast(gen match {
-                        case Some(t) => t.toString() // TODO no checkast T
-                        case None => {
-                          error("Invalid method call, linked to genericity", meth)
-                          ""
-                        }
-                      })
+                  (m.getType, gen) match {
+                    case (TGeneric(_, _), Some(TGeneric(_, _))) => /* case where you call a method with 'this', from a Collection[T] class */
+                    case (TGeneric(_, _), Some(g)) => {
+                      ch << CheckCast(g.toString())
                     }
                     case _ =>
                   }

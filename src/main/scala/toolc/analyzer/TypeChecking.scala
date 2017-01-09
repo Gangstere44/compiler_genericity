@@ -80,17 +80,31 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case This() =>
 
-        case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => {
+        case MethodCall(obj: ExprTree, meth: Identifier, argsMethCall: List[ExprTree]) => {
           tcExpr(obj, obj.getType)
 
-          // TODO check args with meth.argList
-          
           // Also adds missing symbols to methods in MethodCalls
           obj.getType match {
             case TClass(cS, optType) => {
+
               cS.lookupMethod(meth.value) match {
                 case Some(methodSymbol) => {
                   meth.setSymbol(methodSymbol)
+
+                  val argListType = optType match {
+                    case Some(genT) => {
+                      methodSymbol.argList.map(x => x.getType match {
+                        case TGeneric(n, ls) => genT
+                        case a               => a
+                      })
+                    }
+                    case None => methodSymbol.argList.map(_.getType)
+                  }
+
+                  argListType.reverse.zip(argsMethCall).foreach(z =>
+                    if (!z._2.getType.isSubTypeOf(z._1)) {
+                      error("Type error: Expected: " + z._1.toString() + " OR one of its subtype, and found : " + z._2.getType.toString(), z._2)
+                    })
                 }
                 case None => error("Type error: Method '" + meth.value + "' does not exist for class '" + cS.name + "'", meth)
               }
