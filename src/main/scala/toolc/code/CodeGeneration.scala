@@ -389,7 +389,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
                   (m.getType, gen) match {
                     case (TGeneric(_, _), Some(TGeneric(_, _))) => /* case where you call a method with 'this', from a Collection[T] class */
                     case (TGeneric(_, _), Some(g)) => {
-                      ch << CheckCast(g.toString())
+                      ch << CheckCast(g match {case TString => "java/lang/String"; case x => x.toString()})
                     }
                     case _ =>
                   }

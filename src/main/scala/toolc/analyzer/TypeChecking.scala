@@ -87,44 +87,36 @@ object TypeChecking extends Pipeline[Program, Program] {
             cur match {
               case TGeneric(n, lS) => substitute
               case TClass(cS, gen) => TClass(cS, gen.map { x => replaceGeneric(substitute, x) })
-              case TString         => TString
-              case _               => fatal("Non-object type in generic object")
+              case a               => a
             }
           }
 
           // Also adds missing symbols to methods in MethodCalls
           obj.getType match {
-            case objType@TClass(cS, optType) => {
+            case objType @ TClass(cS, optType) => {
 
               cS.lookupMethod(meth.value) match {
                 case Some(methodSymbol) => {
                   meth.setSymbol(methodSymbol)
 
-                  println("***")
-                  println(" parent : " + cS.parent.map { x => x.toStringRec() })
-                  println(optType.map { x => x.toStringRec() })
-                  methodSymbol.argList.foreach { x => println(x.getType.toStringRec()) }
-
                   val argListType = optType match {
                     case Some(genT) => {
-                      
-                      def findGenericType(x : TClass, mS : Symbols.MethodSymbol) : Type = {
-                        if(x.classSymbol.name == mS.classSymbol.name) {
+
+                      def findGenericType(x: TClass, mS: Symbols.MethodSymbol): Type = {
+                        if (x.classSymbol.name == mS.classSymbol.name) {
                           x.genType.getOrElse(TError)
                         } else {
                           x.classSymbol.parent match {
                             case Some(t) => findGenericType(t, mS)
-                            case None => TError
+                            case None    => TError
                           }
                         }
                       }
-                      
+
                       methodSymbol.argList.map(x => replaceGeneric(findGenericType(objType, methodSymbol), x.getType))
                     }
-                    case None       => methodSymbol.argList.map(_.getType)
+                    case None => methodSymbol.argList.map(_.getType)
                   }
-
-                  argListType.foreach { x => println(x.toStringRec()) }
 
                   argListType.reverse.zip(argsMethCall).foreach(z =>
                     if (!z._2.getType.isSubTypeOf(z._1)) {

@@ -86,7 +86,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
           case c: ClassType => {
             global.lookupClass(c.id.value) match {
               case Some(cSym: ClassSymbol) => {
-                Types.TClass(cSym, c.gen.map { x => constructTypeRec(currentCSym, x) })
+                val genType = c.gen.map { x => constructTypeRec(currentCSym, x) }
+                if(!genType.isDefined && !cSym.gen.isEmpty) {
+                  error("Raw type not supported", cur)
+                  Types.TError
+                } else
+                  Types.TClass(cSym, genType)
               }
               case None => {
                 currentCSym.lookupGen(c.id.value) match {
@@ -382,6 +387,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
               tpe.setSymbol(c)
               if (optGen.isDefined) {
                 setTypeSymbol(optGen.get, ms.map { x => x.classSymbol }, gs)
+              } else if(!c.gen.isEmpty) {
+                error("'New' with raw type not supported", tpe)
               }
             }
             case None => error("Undeclared identifier: " + tpe.value + ".", tpe)

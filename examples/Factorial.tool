@@ -83,7 +83,7 @@ class Test {
 	var l5 : List[List[Double]];
 	
 	def test(a : Int) : Int = {
-		/*
+		
 		println("test1");
 		println(1);
 		col1 = new Collection[Number]();
@@ -99,14 +99,16 @@ class Test {
 		
 		println(3);
 		
-		return (col1.getA().init(42) + col2.getA().init(33));
-		*/
+		println(col1.getA().init(42) + col2.getA().init(33));
 		
-		l1 = new List[String]();
+		
+		//l1 = new List[String]();
 		l2 = new List[String]();
 		l3 = new List[Collection[Number]]();
 		l4 = new List[Collection[Double]]();
 		l5 = new List[List[Double]]();
+		
+		l1 = new List[String]();
 		
 		println("test 2");
 		
@@ -116,6 +118,8 @@ class Test {
 		
 		do(l1.initBis(new Collection[String]()));
 		
+		println(l2.initCreation("ok + ") + l1.initCreation(" _ 3 "));
+		
 		return 43;
 	}
 		
@@ -124,11 +128,21 @@ class Test {
 
 class List[Z] extends Collection[Collection[Z]] {
 
-	def initBis(in : Z) : Bool = {		
+	var text : Z;
+
+	def initBis(in : Collection[Z]) : Bool = {		
 		
 		do(this.setB(in));
 	
 		return true;
+	}
+	
+	def initCreation(t : Z) : Z = {
+		
+		text = t;
+		
+		return t;
+		
 	}
 
 }
