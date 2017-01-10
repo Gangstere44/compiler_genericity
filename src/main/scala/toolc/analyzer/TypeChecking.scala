@@ -76,38 +76,6 @@ object TypeChecking extends Pipeline[Program, Program] {
         case MethodCall(obj: ExprTree, meth: Identifier, argsMethCall: List[ExprTree]) => {
           tcExpr(obj, obj.getType)
 
-          def replaceGeneric(genT: Type, mS: Symbols.MethodSymbol, cur: Type, cST: TClass): Type = {
-
-            def findGenericType(x: TClass, mS: Symbols.MethodSymbol): Type = {
-
-              def substitute(g: Type): Type = {
-                g match {
-                  case TGeneric(_, _) => genT
-                  case TClass(c, cg)  => TClass(c, cg map substitute)
-                  case a              => a
-                }
-              }
-
-              if (x.classSymbol.name == mS.classSymbol.name) {
-                x.genType match {
-                  case Some(g) => substitute(g)
-                  case None    => TError
-                }
-              } else {
-                x.classSymbol.parent match {
-                  case Some(t) => findGenericType(t, mS)
-                  case None    => TError
-                }
-              }
-            }
-
-            cur match {
-              case TGeneric(n, lS) => findGenericType(cST, mS)
-              case TClass(cS, gen) => TClass(cS, gen.map { x => replaceGeneric(genT, mS, x, cST) })
-              case a               => a
-            }
-          }
-
           // Also adds missing symbols to methods in MethodCalls
           obj.getType match {
             case objType @ TClass(cS, optType) => {
@@ -117,11 +85,8 @@ object TypeChecking extends Pipeline[Program, Program] {
 
                   /* check gen in arg */
                   val argListType = optType match {
-                    case Some(genT) => {
-
-                      methodSymbol.argList.map(x => replaceGeneric(genT, methodSymbol, x.getType, objType))
-                    }
-                    case None => methodSymbol.argList.map(_.getType)
+                    case Some(genT) => methodSymbol.argList.map(x => replaceGeneric(genT, methodSymbol, x.getType, objType))
+                    case None       => methodSymbol.argList.map(_.getType)
                   }
 
                   argListType.reverse.zip(argsMethCall).foreach(z =>
