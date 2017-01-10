@@ -20,14 +20,7 @@ object TypeChecking extends Pipeline[Program, Program] {
     /** Type checks statements and return expression of the method */
     def tcMethod(meth: MethodDecl): Unit = {
       meth.stats.foreach { s => tcStat(s) }
-      tcExpr(meth.retExpr, meth.retType.getType)
-      /*
-      (meth.args.reverse zip meth.getSymbol.argList).foreach { z =>
-        if (!z._1.getSymbol.getType.isSubTypeOf(z._2.getType)) {
-          error("Type error: Expected: " + z._2.getType.toString() + " OR one of its subtype, and found : " + z._1.getSymbol.getType.toString(), z._1)
-        }
-      }
-      */
+      tcExpr(meth.retExpr, meth.getSymbol.getType)
     }
 
     /**
@@ -83,10 +76,34 @@ object TypeChecking extends Pipeline[Program, Program] {
         case MethodCall(obj: ExprTree, meth: Identifier, argsMethCall: List[ExprTree]) => {
           tcExpr(obj, obj.getType)
 
-          def replaceGeneric(substitute: Type, cur: Type): Type = {
+          def replaceGeneric(genT: Type, mS: Symbols.MethodSymbol, cur: Type, cST: TClass): Type = {
+
+            def findGenericType(x: TClass, mS: Symbols.MethodSymbol): Type = {
+
+              def substitute(g: Type): Type = {
+                g match {
+                  case TGeneric(_, _) => genT
+                  case TClass(c, cg)  => TClass(c, cg map substitute)
+                  case a              => a
+                }
+              }
+
+              if (x.classSymbol.name == mS.classSymbol.name) {
+                x.genType match {
+                  case Some(g) => substitute(g)
+                  case None    => TError
+                }
+              } else {
+                x.classSymbol.parent match {
+                  case Some(t) => findGenericType(t, mS)
+                  case None    => TError
+                }
+              }
+            }
+
             cur match {
-              case TGeneric(n, lS) => substitute
-              case TClass(cS, gen) => TClass(cS, gen.map { x => replaceGeneric(substitute, x) })
+              case TGeneric(n, lS) => findGenericType(cST, mS)
+              case TClass(cS, gen) => TClass(cS, gen.map { x => replaceGeneric(genT, mS, x, cST) })
               case a               => a
             }
           }
@@ -94,26 +111,15 @@ object TypeChecking extends Pipeline[Program, Program] {
           // Also adds missing symbols to methods in MethodCalls
           obj.getType match {
             case objType @ TClass(cS, optType) => {
-
               cS.lookupMethod(meth.value) match {
                 case Some(methodSymbol) => {
                   meth.setSymbol(methodSymbol)
 
+                  /* check gen in arg */
                   val argListType = optType match {
                     case Some(genT) => {
 
-                      def findGenericType(x: TClass, mS: Symbols.MethodSymbol): Type = {
-                        if (x.classSymbol.name == mS.classSymbol.name) {
-                          x.genType.getOrElse(TError)
-                        } else {
-                          x.classSymbol.parent match {
-                            case Some(t) => findGenericType(t, mS)
-                            case None    => TError
-                          }
-                        }
-                      }
-
-                      methodSymbol.argList.map(x => replaceGeneric(findGenericType(objType, methodSymbol), x.getType))
+                      methodSymbol.argList.map(x => replaceGeneric(genT, methodSymbol, x.getType, objType))
                     }
                     case None => methodSymbol.argList.map(_.getType)
                   }
@@ -122,6 +128,7 @@ object TypeChecking extends Pipeline[Program, Program] {
                     if (!z._2.getType.isSubTypeOf(z._1)) {
                       error("Type error: Expected: " + z._1.toStringRec() + " OR one of its subtype, and found : " + z._2.getType.toStringRec(), z._2)
                     })
+
                 }
                 case None => error("Type error: Method '" + meth.value + "' does not exist for class '" + cS.name + "'", meth)
               }

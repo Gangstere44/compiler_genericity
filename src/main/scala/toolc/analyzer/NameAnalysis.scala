@@ -184,16 +184,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
             meth.id.setSymbol(method)
             method.setType(constructTypeRec(cS, meth.retType))
 
-            /*
-            meth.retType match {
-              case ClassType(t, _) => global.lookupClass(t.value) match {
-                case Some(c) => method.setType(c.getType)
-                case None    => method.setType(Types.TError)
-              }
-              case _ => method.setType(meth.retType.getType) // TYPE
-            }
-						*/
-
             // add the arguments of a method
             for (argMeth <- meth.args) {
               if (method.params.contains(argMeth.id.value)) {

@@ -366,7 +366,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ALoad(0)
 
         }
-        case MethodCall(obj, meth, args) => {
+        case mc@MethodCall(obj, meth, args) => {
 
           cGenExpr(obj)
           args.foreach { a => cGenExpr(a) }
@@ -380,15 +380,15 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             else
               "(" + (methSym.argList.reverse.map { a => typeToDescr(a.getType) }.reduce(_ + _)) + ")"
           }
-
+          
           obj.getType match {
             case TClass(c, gen) => {
               c.lookupMethod(meth.value) match {
                 case Some(m) => {
                   ch << InvokeVirtual(c.name, meth.value, tmpArg + typeToDescr(m.getType))
-                  (m.getType, gen) match {
-                    case (TGeneric(_, _), Some(TGeneric(_, _))) => /* case where you call a method with 'this', from a Collection[T] class */
-                    case (TGeneric(_, _), Some(g)) => {
+                  (m.getType, mc.getType) match {
+                    case (TGeneric(_, _), TGeneric(_, _)) => /* case where you call a method with 'this', from a Collection[T] class */
+                    case (TGeneric(_, _), g) => {
                       ch << CheckCast(g match {case TString => "java/lang/String"; case x => x.toString()})
                     }
                     case _ =>
