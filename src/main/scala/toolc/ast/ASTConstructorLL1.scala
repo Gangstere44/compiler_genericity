@@ -44,25 +44,6 @@ class ASTConstructorLL1 extends ASTConstructor {
     }
   }
 
-  /* original
-  override def constructType(ptree: NodeOrLeaf[Token]): TypeTree = {
-    ptree match {
-      case Node('Type ::= _, List(Leaf(i @ INT()), ti)) =>
-        constructTypeInt(ti).setPos(i)
-      case Node('Type ::= _, List(Leaf(b @ BOOLEAN()))) =>
-        BooleanType().setPos(b)
-      case Node('Type ::= _, List(Leaf(s @ STRING()))) =>
-        StringType().setPos(s)
-      case Node('Type ::= List(IDSENT), List(id)) =>
-        val pid = constructId(id)
-        ClassType(pid).setPos(pid)
-      case Node('Type ::= List('Identifier), List(id)) =>
-        val pid = constructId(id)
-        ClassType(pid).setPos(pid)
-    }
-  }
-  */
-
   override def constructType(ptree: NodeOrLeaf[Token]): TypeTree = {
     ptree match {
       case Node('Type ::= _, List(Leaf(i @ INT()), ti)) =>
@@ -83,7 +64,6 @@ class ASTConstructorLL1 extends ASTConstructor {
     }
   }
 
-  // add
   def constructTypeObject(ptree: NodeOrLeaf[Token]): ObjectTypeTree = {
     ptree match {
       case Node('TypeObject ::= _, List(Leaf(s @ STRING()))) =>

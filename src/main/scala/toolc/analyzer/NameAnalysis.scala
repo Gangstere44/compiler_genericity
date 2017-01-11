@@ -24,9 +24,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
         error("the main object is called object", prog.main.id)
       }
       for (c <- prog.classes) {
-        val cS = new ClassSymbol(c.id.value) //c.gen.map { x => x.value })
+        val cS = new ClassSymbol(c.id.value)
         if (c.gen.isDefined) {
-          val gS = new GenericSymbol(c.gen.get.value, cS) // TODO pour multiple
+          val gS = new GenericSymbol(c.gen.get.value, cS)
           c.gen.get.setSymbol(gS)
           cS.gen.+=(c.gen.get.value -> gS)
         }
@@ -87,7 +87,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             global.lookupClass(c.id.value) match {
               case Some(cSym: ClassSymbol) => {
                 val genType = c.gen.map { x => constructTypeRec(currentCSym, x) }
-                if(!genType.isDefined && !cSym.gen.isEmpty) {
+                if (!genType.isDefined && !cSym.gen.isEmpty) {
                   error("Raw type not supported", cur)
                   Types.TError
                 } else
@@ -144,29 +144,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           for (varClass <- parentDecl.vars) {
             val varS = new VariableSymbol(varClass.id.value);
             varS.setType(constructTypeRec(cS, varClass.tpe))
-            /*
-            varClass.tpe match {
-              case ClassType(t, g) => global.lookupClass(t.value) match { 
-                 case Some(sym) => {
-                  g match {
-                    case Some(genericity) => 
-                    case None => varS.setType(sym.getType)
-                  }
-                  varS.setType(Types.TClass(NodeSymbole, Some(TClass(NodeSymbol, Some(TGeneric(Node[T])))))
-                  
-                }
-                
-                case None => {
-                  if (cS.gen.getOrElse("") == t.value && !g.isDefined) {
-                    varS.setType(Types.TGeneric(cS))
-                  } else {
-                    varS.setType(Types.TError)
-                  }
-                }
-              }
-              case _ => varS.setType(varClass.tpe.getType) // TYPE
-            }
-            */
+
             cS.lookupVar(varS.name) match {
               case Some(v) => error("Multiple definition of a variable in a class", varClass.id)
               case None => {
@@ -194,16 +172,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 argMeth.id.setSymbol(argS)
                 argS.setType(constructTypeRec(cS, argMeth.tpe))
 
-                /*
-                argMeth.tpe match {
-                  case ClassType(t, _) => global.lookupClass(t.value) match { 
-                    case Some(c) => argS.setType(c.getType)
-                    case None    => argS.setType(Types.TError)
-                  }
-                  case _ => argS.setType(argMeth.tpe.getType) // TYPE
-                }
-                */
-
                 method.params += (argS.name -> argS)
                 method.argList = method.argList.+:(argS)
               }
@@ -220,16 +188,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 varMeth.setSymbol(varS)
                 varMeth.id.setSymbol(varS)
                 varS.setType(constructTypeRec(cS, varMeth.tpe))
-
-                /*
-                varMeth.tpe match {
-                  case ClassType(t, _) => global.lookupClass(t.value) match { 
-                    case Some(c) => varS.setType(c.getType)
-                    case None    => varS.setType(Types.TError)
-                  }
-                  case _ => varS.setType(varMeth.tpe.getType) // TYPE
-                }
-                */
 
                 method.members += (varS.name -> varS)
               }
@@ -377,7 +335,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               tpe.setSymbol(c)
               if (optGen.isDefined) {
                 setTypeSymbol(optGen.get, ms.map { x => x.classSymbol }, gs)
-              } else if(!c.gen.isEmpty) {
+              } else if (!c.gen.isEmpty) {
                 error("'New' with raw type not supported", tpe)
               }
             }
@@ -457,11 +415,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 }
                 case None => error("Undeclared identifier: " + id.value + ".", id)
               }
-
             }
           }
         }
-
         case _ =>
       }
     }
