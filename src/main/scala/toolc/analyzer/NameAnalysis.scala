@@ -68,7 +68,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         def mkChain(curr: ClassSymbol): List[ClassSymbol] = {
           curr.parent match {
             case None           => List(curr)
-            case Some(`clsSym`) => List(curr, clsSym)
+            case Some(Types.TClass(`clsSym`,_)) => List(curr, clsSym)
             case Some(p)        => curr :: mkChain(p.classSymbol)
           }
         }
@@ -81,6 +81,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       }
 
+      //TODO explain
       def constructTypeRec(currentCSym: ClassSymbol, cur: TypeTree): Types.Type = {
         cur match {
           case c: ClassType => {
